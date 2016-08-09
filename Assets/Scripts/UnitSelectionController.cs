@@ -38,7 +38,11 @@ public class UnitSelectionController : MonoBehaviour
     private void SelectUnits()
     {
         _selectedUnits.Clear();
-        
+        foreach (Transform child in UIParent)
+        {
+            Destroy(child.gameObject);
+        }
+
         var units = transform.GetComponentsInChildren<ISelectable>();
         units.ForEach(unit =>
         {
@@ -50,16 +54,19 @@ public class UnitSelectionController : MonoBehaviour
             else unit.Deselect();
         });
 
+        int counter = 0;
         SelectedUnits.ForEach(unit =>
         {
             var uiPortrait = Instantiate(UIPortraitPrefab);
-            uiPortrait.transform.SetParent(UIParent);
+            uiPortrait.transform.SetParent(UIParent, false);
+            uiPortrait.transform.localPosition = new Vector3(0, -60*counter - 30, 0);
             var script = uiPortrait.GetComponent<UnitPortraitUI>();
             if (script != null)
             {
                 script.Name = "test";
                 script.UpdateUI();
             }
+            counter++;
         });
 
     }
