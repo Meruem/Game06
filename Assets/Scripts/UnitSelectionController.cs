@@ -1,13 +1,19 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Utility;
 using UnityEngine;
 
-public class UnitSelectionComponent : MonoBehaviour
+public class UnitSelectionController : MonoBehaviour
 {
     private bool _isSelecting;
     private Vector3 _mousePosition1;
-    private readonly List<UnitScript> _selectedUnits = new List<UnitScript>();
+    private readonly List<GameObject> _selectedUnits = new List<GameObject>();
+
+    public GameObject UIPortraitPrefab;
+    public Transform UIParent;
+
+    public List<GameObject> SelectedUnits {  get { return _selectedUnits; } } 
 
     public void Update()
     {
@@ -27,31 +33,35 @@ public class UnitSelectionComponent : MonoBehaviour
             _isSelecting = false;
         }
 
-        // Right click
-        if (Input.GetMouseButtonUp(1))
-        {
-            _selectedUnits.ForEach(unit =>
-            {
-                var targetPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                unit.MoveToPosition(targetPos);
-            });
-        }
     }
 
     private void SelectUnits()
     {
         _selectedUnits.Clear();
         
-        var units = transform.GetComponentsInChildren<UnitScript>();
+        var units = transform.GetComponentsInChildren<ISelectable>();
         units.ForEach(unit =>
         {
-            if (IsWithinSelectionBounds(unit.gameObject))
+            if (IsWithinSelectionBounds(unit.GameObject))
             {
-                unit.SelectUnit();
-                _selectedUnits.Add(unit);
+                unit.Select();
+                _selectedUnits.Add(unit.GameObject);
             }
-            else unit.DelesectUnit();
+            else unit.Deselect();
         });
+
+        SelectedUnits.ForEach(unit =>
+        {
+            var uiPortrait = Instantiate(UIPortraitPrefab);
+            uiPortrait.transform.SetParent(UIParent);
+            var script = uiPortrait.GetComponent<UnitPortraitUI>();
+            if (script != null)
+            {
+                script.Name = "test";
+                script.UpdateUI();
+            }
+        });
+
     }
 
 

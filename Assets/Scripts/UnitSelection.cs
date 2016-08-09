@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
-using System.Collections;
+using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 
-public class SelectionScript : MonoBehaviour
+public class UnitSelection : MonoBehaviour, ISelectable
 {
     private SpriteRenderer _renderer;
 
 	// Use this for initialization
-	void Start ()
+    public void Start ()
 	{
 	    _renderer = GetComponent<SpriteRenderer>();
 	    this.GetPubSub().SubscribeInContext<SelectUnitMessage>(m => OnSelectionChange((SelectUnitMessage)m));
@@ -18,4 +18,16 @@ public class SelectionScript : MonoBehaviour
     {
         _renderer.enabled = selectUnitMessage.IsSelected;
     }
+
+    public void Select()
+    {
+        _renderer.enabled = true;
+    }
+
+    public void Deselect()
+    {
+        _renderer.enabled = false;
+    }
+
+    public GameObject GameObject { get { return gameObject.transform.parent.gameObject;} }
 }
