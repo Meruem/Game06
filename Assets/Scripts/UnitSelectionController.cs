@@ -3,6 +3,8 @@ using Assets.Scripts;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Utility;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class UnitSelectionController : MonoBehaviour
 {
@@ -18,13 +20,13 @@ public class UnitSelectionController : MonoBehaviour
     public void Update()
     {
         // If we press the left mouse button, save mouse location and begin selection
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && EventSystem.current.currentSelectedGameObject == null)
         {
             _isSelecting = true;
             _mousePosition1 = Input.mousePosition;
         }
         // If we let go of the left mouse button, end selection
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && EventSystem.current.currentSelectedGameObject == null)
         {
             if (_isSelecting)
             {
@@ -35,13 +37,38 @@ public class UnitSelectionController : MonoBehaviour
 
     }
 
-    private void SelectUnits()
+    private void ClearSelection()
     {
+        _selectedUnits.ForEach(unit =>
+        {
+            var scripts = unit.GetComponentsInChildren<ISelectable>();
+            scripts.ForEach(sc => sc.Deselect());
+        });
         _selectedUnits.Clear();
         foreach (Transform child in UIParent)
         {
             Destroy(child.gameObject);
         }
+    }
+
+    public void SelectUnit(GameObject unit)
+    {
+        ClearSelection();
+        var scripts = unit.GetComponentsInChildren<ISelectable>();
+        if (scripts != null)
+        {
+            scripts.ForEach(sel =>
+            {
+                sel.Select();
+            });
+        }
+        _selectedUnits.Add(unit);
+        CreateUnitPortraitUI(0, unit);
+    }
+
+    private void SelectUnits()
+    {
+        ClearSelection();
 
         var units = transform.GetComponentsInChildren<ISelectable>();
         units.ForEach(unit =>
@@ -51,24 +78,32 @@ public class UnitSelectionController : MonoBehaviour
                 unit.Select();
                 _selectedUnits.Add(unit.GameObject);
             }
-            else unit.Deselect();
         });
 
         int counter = 0;
         SelectedUnits.ForEach(unit =>
         {
-            var uiPortrait = Instantiate(UIPortraitPrefab);
-            uiPortrait.transform.SetParent(UIParent, false);
-            uiPortrait.transform.localPosition = new Vector3(0, -60*counter - 30, 0);
-            var script = uiPortrait.GetComponent<UnitPortraitUI>();
-            if (script != null)
-            {
-                script.Name = "test";
-                script.UpdateUI();
-            }
+            CreateUnitPortraitUI(counter, unit);
             counter++;
         });
 
+    }
+
+    private void CreateUnitPortraitUI(int position, GameObject unit)
+    {
+        var uiPortrait = Instantiate(UIPortraitPrefab);
+        uiPortrait.transform.SetParent(UIParent, false);
+        uiPortrait.transform.localPosition = new Vector3(0, -60*position - 30, 0);
+        var script = uiPortrait.GetComponent<UnitPortraitUI>();
+        if (script != null)
+        {
+            script.Unit = unit.gameObject;
+            script.Name = "test";
+            script.SelectionController = this;
+            script.gameObject.GetComponentInChildren<Button>()
+                .onClick.AddListener(() => { script.Select(); });
+            script.UpdateUI();
+        }
     }
 
 
