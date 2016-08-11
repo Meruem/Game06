@@ -34,7 +34,6 @@ public class UnitSelectionController : MonoBehaviour
             }
             _isSelecting = false;
         }
-
     }
 
     private void ClearSelection()
@@ -91,6 +90,8 @@ public class UnitSelectionController : MonoBehaviour
 
     private void CreateUnitPortraitUI(int position, GameObject unit)
     {
+        var unitScript = unit.GetComponent<UnitScript>();
+
         var uiPortrait = Instantiate(UIPortraitPrefab);
         uiPortrait.transform.SetParent(UIParent, false);
         uiPortrait.transform.localPosition = new Vector3(0, -60*position - 30, 0);
@@ -98,7 +99,7 @@ public class UnitSelectionController : MonoBehaviour
         if (script != null)
         {
             script.Unit = unit.gameObject;
-            script.Name = "test";
+            script.Name = unitScript == null ? "Unit" : unitScript.Name;
             script.SelectionController = this;
             script.gameObject.GetComponentInChildren<Button>()
                 .onClick.AddListener(() => { script.Select(); });
